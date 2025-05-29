@@ -4,8 +4,8 @@ import { useEffect, useState, useCallback, useRef, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import Image from 'next/image';
 import celebrationAnimation from '../../../../public/animations/celebration.json';
+import Image from 'next/image';
 
 // Lottieを動的インポートでSSRを無効にする
 const Lottie = dynamic(() => import('lottie-react'), {
@@ -33,6 +33,7 @@ export default function CountPage({ params }: CountPageParams) {
   const [countdown, setCountdown] = useState<Countdown | null>(null);
   const [currentValueInput, setCurrentValueInput] = useState('');
   const [targetValueInput, setTargetValueInput] = useState('');
+  const [nameInput, setNameInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCelebration, setShowCelebration] = useState(false);
@@ -278,6 +279,32 @@ export default function CountPage({ params }: CountPageParams) {
     }
   };
 
+  const handleSetName = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!countdown || !nameInput.trim()) return;
+    
+    try {
+      const response = await fetch(`/api/count/${countdown.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: nameInput.trim() }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || '名前の更新に失敗しました');
+      }
+      
+      const data = await response.json();
+      setCountdown(data);
+      setNameInput('');
+      setError('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '名前の更新に失敗しました');
+      console.error(err);
+    }
+  };
+
   // 数値を桁ごとに分割する関数
   const getDigits = (num: number): number[] => {
     return num.toString().split('').map(Number);
@@ -285,9 +312,21 @@ export default function CountPage({ params }: CountPageParams) {
 
   if (loading && !countdown) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-gradient-to-b from-blue-50 to-blue-100">
-        <div className="text-center">
-          <p className="text-2xl text-gray-600">読み込み中...</p>
+      <main className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 relative overflow-hidden flex items-center justify-center">
+        {/* 背景装飾 */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `radial-gradient(circle at 25px 25px, rgba(156, 146, 172, 0.1) 2px, transparent 2px)`,
+            backgroundSize: '50px 50px'
+          }}></div>
+        </div>
+        
+        <div className="text-center animate-fade-in">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-white/20 backdrop-blur-lg rounded-full mb-6 animate-spin border border-white/30">
+            <div className="w-10 h-10 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+          </div>
+          <p className="text-3xl text-white font-semibold">読み込み中...</p>
+          <p className="text-white/70 mt-2">カウントダウンデータを取得しています</p>
         </div>
       </main>
     );
@@ -295,10 +334,24 @@ export default function CountPage({ params }: CountPageParams) {
 
   if (!countdown) {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-gradient-to-b from-blue-50 to-blue-100">
-        <div className="text-center">
-          <p className="text-2xl text-red-600 mb-4">カウントアップが見つかりません</p>
-          <Link href="/" className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg shadow-md font-bold transition duration-200">
+      <main className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 relative overflow-hidden flex items-center justify-center">
+        {/* 背景装飾 */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `radial-gradient(circle at 25px 25px, rgba(156, 146, 172, 0.1) 2px, transparent 2px)`,
+            backgroundSize: '50px 50px'
+          }}></div>
+        </div>
+        
+        <div className="text-center animate-fade-in">
+          <div className="text-8xl mb-6">😵</div>
+          <h1 className="text-4xl font-bold text-white mb-4">カウントアップが見つかりません</h1>
+          <p className="text-white/70 text-xl mb-8">指定されたカウントアップは存在しないか、削除された可能性があります</p>
+          <Link 
+            href="/" 
+            className="inline-flex items-center bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-8 py-4 rounded-2xl shadow-2xl font-bold text-lg transition-all duration-300 transform hover:scale-105"
+          >
+            <span className="text-2xl mr-3">🏠</span>
             トップページに戻る
           </Link>
         </div>
@@ -307,139 +360,277 @@ export default function CountPage({ params }: CountPageParams) {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-8 bg-gradient-to-b from-blue-50 to-blue-100">
-      <div className="w-full max-w-4xl">
-        <div className="flex items-center justify-between mb-8">
-          <Link href="/" className="text-blue-600 hover:text-blue-800 mb-4 flex items-center">
-            ← 戻る
-          </Link>
-          <h1 className="text-3xl font-bold text-blue-800">{countdown.name}</h1>
-          <div className="w-24"></div> {/* スペーサー */}
-        </div>
-
-        {/* エラーメッセージ */}
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-            {error}
-          </div>
-        )}
-
-        <div className="relative w-full">
-          <div className="absolute right-0 bottom-0 transform translate-y-1/4">
-            <Image 
-              src="/ninty.png" 
-              alt="キャラクター" 
-              width={150} 
-              height={150} 
-              className="z-10"
-            />
-          </div>
-        </div>
-
-        <div className="bg-white p-8 rounded-lg shadow-md mb-8 text-center relative">
-          <p className="text-lg text-gray-600 mb-4">目標: {countdown.targetValue}</p>
-          
-          <div className="flex justify-center gap-2 mb-6">
-            {getDigits(countdown.currentValue).map((digit, index) => (
-              <div key={index} className="flex items-center justify-center w-24 h-32 bg-white border-2 border-blue-500 rounded-lg shadow-lg text-8xl font-bold text-blue-700 mb-10 mt-10">
-                {digit}
+    <main className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 relative overflow-hidden">
+      {/* 背景装飾 */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `radial-gradient(circle at 25px 25px, rgba(156, 146, 172, 0.1) 2px, transparent 2px)`,
+          backgroundSize: '50px 50px'
+        }}></div>
+      </div>
+      
+      {/* 浮遊する装飾要素 */}
+      <div className="absolute top-20 left-10 w-20 h-20 bg-gradient-to-r from-pink-400 to-purple-400 rounded-full opacity-20 animate-pulse"></div>
+      <div className="absolute top-40 right-20 w-16 h-16 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full opacity-20 animate-bounce"></div>
+      <div className="absolute bottom-20 left-20 w-24 h-24 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full opacity-20 animate-pulse delay-1000"></div>
+      <div className="absolute bottom-40 right-10 w-12 h-12 bg-gradient-to-r from-green-400 to-teal-400 rounded-full opacity-20 animate-bounce delay-500"></div>
+      
+      <div className="relative z-10 flex flex-col items-center p-8">
+        <div className="w-full max-w-6xl">
+          {/* ヘッダー */}
+          <div className="flex items-center justify-between mb-12 animate-fade-in">
+            <Link href="/" className="group flex items-center text-white/80 hover:text-white transition-all duration-300 transform hover:scale-105">
+              <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center mr-3 group-hover:bg-white/30 transition-all duration-300">
+                <span className="text-xl">←</span>
               </div>
-            ))}
+              <span className="font-semibold">戻る</span>
+            </Link>
+            
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full mb-4 shadow-2xl animate-float">
+                <span className="text-2xl">🎯</span>
+              </div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent drop-shadow-lg">
+                {countdown.name}
+              </h1>
+            </div>
+            
+            <div className="w-24"></div> {/* スペーサー */}
           </div>
-          
-          <div className="w-full bg-gray-200 rounded-full h-4 mb-4">
-            <div 
-              className="bg-blue-600 h-4 rounded-full" 
-              style={{ width: `${Math.min(100, Math.round((countdown.currentValue / countdown.targetValue) * 100))}%` }}
-            ></div>
-          </div>
-          
-          <p className="text-lg text-gray-600 mb-6">
-            進捗: {countdown.currentValue} / {countdown.targetValue}
-            （{Math.round((countdown.currentValue / countdown.targetValue) * 100)}%）
-          </p>
-          
-          {/* お祝いアニメーション */}
-          {showCelebration && isClient && (
-            <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none" style={{ background: 'rgba(255,255,255,0.7)' }}>
-              <div className="w-full h-full max-w-lg">
-                <Lottie
-                  animationData={celebrationAnimation}
-                  loop={true}
-                  autoplay={true}
-                  rendererSettings={{
-                    preserveAspectRatio: 'xMidYMid slice'
-                  }}
-                  style={{ width: '100%', height: '100%' }}
-                />
-                <div className="text-center mt-4">
-                  <h2 className="text-2xl font-bold text-blue-800">おめでとう！目標達成！</h2>
-                </div>
+
+          {/* エラーメッセージ */}
+          {error && (
+            <div className="bg-red-500/20 backdrop-blur-sm border border-red-400/50 text-red-100 px-6 py-4 rounded-2xl mb-8 shadow-lg animate-shake">
+              <div className="flex items-center">
+                <span className="text-2xl mr-3">⚠️</span>
+                {error}
               </div>
             </div>
           )}
-        </div>
-        
-        <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-          <h2 className="text-xl font-bold mb-2 text-blue-700">カウントアップ情報</h2>
-          <dl className="grid grid-cols-[120px_1fr] gap-2">
-            <dt className="text-gray-600">ID:</dt>
-            <dd>{countdown.id}</dd>
-            <dt className="text-gray-600">作成日時:</dt>
-            <dd>{new Date(countdown.createdAt).toLocaleString()}</dd>
-            <dt className="text-gray-600">更新日時:</dt>
-            <dd>{new Date(countdown.updatedAt).toLocaleString()}</dd>
-          </dl>
 
-          <form onSubmit={handleSetCurrentValue} className="flex gap-2 justify-center mb-4 mt-16">
-            <input
-              type="number"
-              value={currentValueInput}
-              onChange={(e) => setCurrentValueInput(e.target.value)}
-              className="border p-2 rounded shadow-sm w-32"
-              placeholder="現在値を入力"
-              min="0"
-              max={countdown.targetValue}
-            />
-            <button 
-              type="submit" 
-              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded shadow-md transition duration-200"
-            >
-              値をセット
-            </button>
-          </form>
+          {/* キャラクター画像 */}
+          <div className="relative w-full mb-8">
+            <div className="absolute right-0 bottom-0 transform translate-y-1/4 z-10">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full blur-xl opacity-30 animate-pulse"></div>
+                <Image 
+                  src="/ninty.png" 
+                  alt="キャラクター" 
+                  width={150} 
+                  height={150} 
+                  className="relative z-10 animate-float drop-shadow-2xl"
+                />
+              </div>
+            </div>
+          </div>
 
-          <form onSubmit={handleSetTargetValue} className="flex gap-2 justify-center mb-8">
-            <input
-              type="number"
-              value={targetValueInput}
-              onChange={(e) => setTargetValueInput(e.target.value)}
-              className="border p-2 rounded shadow-sm w-32"
-              placeholder="目標値を入力"
-              min="1"
-            />
-            <button 
-              type="submit" 
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow-md transition duration-200"
-            >
-              目標値をセット
-            </button>
-          </form>
+          {/* メインカウンター表示 */}
+          <div className="bg-white/10 backdrop-blur-lg p-12 rounded-3xl shadow-2xl mb-8 text-center relative border border-white/20 hover:bg-white/15 transition-all duration-300">
+            {/* 目標値表示 */}
+            <div className="mb-8">
+              <div className="inline-flex items-center bg-white/20 backdrop-blur-sm px-6 py-3 rounded-2xl border border-white/30">
+                <span className="text-2xl mr-3">🏁</span>
+                <span className="text-white/90 font-semibold text-lg">目標: </span>
+                <span className="text-white font-bold text-2xl ml-2">{countdown.targetValue}</span>
+              </div>
+            </div>
+            
+            {/* 数字表示 */}
+            <div className="flex justify-center gap-4 mb-8">
+              {getDigits(countdown.currentValue).map((digit, index) => (
+                <div 
+                  key={index} 
+                  className="relative group"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-2xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity duration-300"></div>
+                  <div className="relative flex items-center justify-center w-28 h-40 bg-white/20 backdrop-blur-lg border-2 border-white/30 rounded-2xl shadow-2xl text-8xl font-bold text-white hover:scale-105 transition-all duration-300 animate-fade-in-up">
+                    <span className="drop-shadow-lg">{digit}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* プログレスバー */}
+            <div className="mb-8">
+              <div className="flex justify-between text-white/80 text-lg mb-4 font-semibold">
+                <span>進捗状況</span>
+                <span>{Math.round((countdown.currentValue / countdown.targetValue) * 100)}%</span>
+              </div>
+              <div className="relative w-full bg-white/20 rounded-full h-6 overflow-hidden backdrop-blur-sm border border-white/30">
+                <div 
+                  className="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 h-6 rounded-full transition-all duration-1000 ease-out shadow-lg"
+                  style={{ width: `${Math.min(100, Math.round((countdown.currentValue / countdown.targetValue) * 100))}%` }}
+                >
+                  <div className="absolute inset-0 bg-white/20 rounded-full animate-pulse"></div>
+                </div>
+              </div>
+              <div className="mt-4 text-center">
+                <span className="text-white/90 text-xl font-semibold">
+                  {countdown.currentValue} / {countdown.targetValue}
+                </span>
+              </div>
+            </div>
+            
+            {/* お祝いアニメーション */}
+            {showCelebration && isClient && (
+              <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none rounded-3xl" style={{ background: 'rgba(255,255,255,0.1)' }}>
+                <div className="w-full h-full max-w-lg">
+                  <Lottie
+                    animationData={celebrationAnimation}
+                    loop={true}
+                    autoplay={true}
+                    rendererSettings={{
+                      preserveAspectRatio: 'xMidYMid slice'
+                    }}
+                    style={{ width: '100%', height: '100%' }}
+                  />
+                  <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center">
+                    <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-black px-8 py-4 rounded-2xl shadow-2xl">
+                      <h2 className="text-3xl font-bold">🎉 おめでとう！目標達成！ 🎉</h2>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* 操作ボタン */}
+          <div className="bg-white/10 backdrop-blur-lg p-8 rounded-3xl shadow-2xl mb-8 border border-white/20">
+            <div className="flex items-center mb-6">
+              <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-blue-400 rounded-full flex items-center justify-center mr-3">
+                <span className="text-white text-lg">⚡</span>
+              </div>
+              <h2 className="text-2xl font-bold text-white">カウントアップ操作</h2>
+            </div>
+            
+            <div className="flex justify-center gap-6 mb-8">
+              <button 
+                onClick={handleIncrement}
+                disabled={countdown.currentValue >= countdown.targetValue}
+                className="group relative bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:from-gray-500 disabled:to-gray-600 text-white px-8 py-4 rounded-2xl shadow-2xl font-bold text-lg transition-all duration-300 transform hover:scale-105 disabled:cursor-not-allowed disabled:transform-none"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-400 rounded-2xl blur-lg opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
+                <div className="relative flex items-center">
+                  <span className="text-2xl mr-3">⬆️</span>
+                  カウントアップ
+                </div>
+              </button>
+              
+              <button 
+                onClick={handleReset}
+                className="group relative bg-gradient-to-r from-gray-500 to-slate-500 hover:from-gray-600 hover:to-slate-600 text-white px-8 py-4 rounded-2xl shadow-2xl font-bold text-lg transition-all duration-300 transform hover:scale-105"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-gray-400 to-slate-400 rounded-2xl blur-lg opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
+                <div className="relative flex items-center">
+                  <span className="text-2xl mr-3">🔄</span>
+                  リセット
+                </div>
+              </button>
+            </div>
+          </div>
           
-          <h2 className="text-xl font-bold mb-2 text-blue-700">カウントアップ操作</h2>
-          <div className="flex justify-center gap-4">
-            <button 
-              onClick={handleIncrement}
-              className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded-lg shadow-md font-bold transition duration-200"
-            >
-              カウントアップ
-            </button>
-            <button 
-              onClick={handleReset}
-              className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded-lg shadow-md font-bold transition duration-200"
-            >
-              リセット
-            </button>
+          {/* 設定・情報パネル */}
+          <div className="bg-white/10 backdrop-blur-lg p-8 rounded-3xl shadow-2xl border border-white/20">
+            <div className="flex items-center mb-6">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full flex items-center justify-center mr-3">
+                <span className="text-white text-lg">⚙️</span>
+              </div>
+              <h2 className="text-2xl font-bold text-white">設定・情報</h2>
+            </div>
+            
+            {/* 値設定フォーム */}
+            <div className="grid md:grid-cols-3 gap-6 mb-8">
+              <form onSubmit={handleSetName} className="space-y-4">
+                <label className="block text-white/90 font-semibold text-lg">✏️ 名前を変更</label>
+                <div className="flex gap-3">
+                  <input
+                    type="text"
+                    value={nameInput}
+                    onChange={(e) => setNameInput(e.target.value)}
+                    className="flex-1 bg-white/20 backdrop-blur-sm border border-white/30 p-4 rounded-2xl shadow-lg text-white placeholder-white/60 focus:outline-none focus:ring-4 focus:ring-purple-400/50 focus:border-purple-400 transition-all duration-300"
+                    placeholder="新しい名前を入力"
+                  />
+                  <button 
+                    type="submit" 
+                    className="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white px-6 py-4 rounded-2xl shadow-lg font-bold transition-all duration-300 transform hover:scale-105"
+                  >
+                    変更
+                  </button>
+                </div>
+              </form>
+
+              <form onSubmit={handleSetCurrentValue} className="space-y-4">
+                <label className="block text-white/90 font-semibold text-lg">📊 現在値を設定</label>
+                <div className="flex gap-3">
+                  <input
+                    type="number"
+                    value={currentValueInput}
+                    onChange={(e) => setCurrentValueInput(e.target.value)}
+                    className="flex-1 bg-white/20 backdrop-blur-sm border border-white/30 p-4 rounded-2xl shadow-lg text-white placeholder-white/60 focus:outline-none focus:ring-4 focus:ring-purple-400/50 focus:border-purple-400 transition-all duration-300"
+                    placeholder="現在値を入力"
+                    min="0"
+                    max={countdown.targetValue}
+                  />
+                  <button 
+                    type="submit" 
+                    className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white px-6 py-4 rounded-2xl shadow-lg font-bold transition-all duration-300 transform hover:scale-105"
+                  >
+                    設定
+                  </button>
+                </div>
+              </form>
+
+              <form onSubmit={handleSetTargetValue} className="space-y-4">
+                <label className="block text-white/90 font-semibold text-lg">🎯 目標値を設定</label>
+                <div className="flex gap-3">
+                  <input
+                    type="number"
+                    value={targetValueInput}
+                    onChange={(e) => setTargetValueInput(e.target.value)}
+                    className="flex-1 bg-white/20 backdrop-blur-sm border border-white/30 p-4 rounded-2xl shadow-lg text-white placeholder-white/60 focus:outline-none focus:ring-4 focus:ring-purple-400/50 focus:border-purple-400 transition-all duration-300"
+                    placeholder="目標値を入力"
+                    min="1"
+                  />
+                  <button 
+                    type="submit" 
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-6 py-4 rounded-2xl shadow-lg font-bold transition-all duration-300 transform hover:scale-105"
+                  >
+                    設定
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* 詳細情報 */}
+            <div className="bg-white/10 backdrop-blur-sm p-6 rounded-2xl border border-white/20">
+              <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+                <span className="text-2xl mr-3">📋</span>
+                詳細情報
+              </h3>
+              <div className="grid md:grid-cols-2 gap-4 text-white/80">
+                <div className="flex items-center">
+                  <span className="text-lg mr-2">🆔</span>
+                  <span className="font-semibold mr-2">ID:</span>
+                  <span>{countdown.id}</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="text-lg mr-2">📅</span>
+                  <span className="font-semibold mr-2">作成日:</span>
+                  <span>{new Date(countdown.createdAt).toLocaleDateString('ja-JP')}</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="text-lg mr-2">🕒</span>
+                  <span className="font-semibold mr-2">更新日:</span>
+                  <span>{new Date(countdown.updatedAt).toLocaleDateString('ja-JP')}</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="text-lg mr-2">📈</span>
+                  <span className="font-semibold mr-2">達成率:</span>
+                  <span>{Math.round((countdown.currentValue / countdown.targetValue) * 100)}%</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
