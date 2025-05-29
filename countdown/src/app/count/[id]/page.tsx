@@ -1,11 +1,17 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Lottie from 'lottie-react';
-import celebrationAnimation from '../../../../public/animations/celebration.json';
+import dynamic from 'next/dynamic';
 import Image from 'next/image';
+import celebrationAnimation from '../../../../public/animations/celebration.json';
+
+// Lottieを動的インポートでSSRを無効にする
+const Lottie = dynamic(() => import('lottie-react'), {
+  ssr: false,
+  loading: () => <div className="w-full h-full flex items-center justify-center text-4xl">🎉</div>
+});
 
 type Countdown = {
   id: number;
@@ -17,9 +23,9 @@ type Countdown = {
 };
 
 type CountPageParams = {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 };
 
 export default function CountPage({ params }: CountPageParams) {
@@ -29,10 +35,16 @@ export default function CountPage({ params }: CountPageParams) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCelebration, setShowCelebration] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   const prevCurrentValueRef = useRef<number | null>(null);
   
-  // Next.jsの警告を回避するためにparamsから明示的に取り出す
-  const id = params.id;
+  // React.use()を使ってparamsから値を取得
+  const { id } = use(params);
+
+  // クライアントサイドでのみLottieを表示するためのフラグ
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const fetchCountdown = useCallback(async () => {
     if (!id) return;
@@ -318,7 +330,7 @@ export default function CountPage({ params }: CountPageParams) {
           </p>
           
           {/* お祝いアニメーション */}
-          {showCelebration && (
+          {showCelebration && isClient && (
             <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none" style={{ background: 'rgba(255,255,255,0.7)' }}>
               <div className="w-full h-full max-w-lg">
                 <Lottie

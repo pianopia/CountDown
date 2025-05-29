@@ -6,15 +6,16 @@ import { eq } from 'drizzle-orm';
 // 特定のカウントアップを取得
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
-    if (isNaN(id)) {
+    const { id } = await params;
+    const parsedId = parseInt(id);
+    if (isNaN(parsedId)) {
       return NextResponse.json({ error: '無効なID' }, { status: 400 });
     }
 
-    const result = await db.select().from(countdowns).where(eq(countdowns.id, id));
+    const result = await db.select().from(countdowns).where(eq(countdowns.id, parsedId));
     
     if (result.length === 0) {
       return NextResponse.json({ error: 'カウントアップが見つかりません' }, { status: 404 });
@@ -30,18 +31,19 @@ export async function GET(
 // カウントアップを更新
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
-    if (isNaN(id)) {
+    const { id } = await params;
+    const parsedId = parseInt(id);
+    if (isNaN(parsedId)) {
       return NextResponse.json({ error: '無効なID' }, { status: 400 });
     }
 
     const { name, targetValue, currentValue, increment } = await request.json();
     
     // 現在のデータを取得
-    const currentRecord = await db.select().from(countdowns).where(eq(countdowns.id, id));
+    const currentRecord = await db.select().from(countdowns).where(eq(countdowns.id, parsedId));
     
     if (currentRecord.length === 0) {
       return NextResponse.json({ error: 'カウントアップが見つかりません' }, { status: 404 });
@@ -71,7 +73,7 @@ export async function PUT(
     
     const result = await db.update(countdowns)
       .set(updateData)
-      .where(eq(countdowns.id, id))
+      .where(eq(countdowns.id, parsedId))
       .returning();
     
     if (result.length === 0) {
@@ -88,18 +90,19 @@ export async function PUT(
 // カウントアップを更新
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
-    if (isNaN(id)) {
+    const { id } = await params;
+    const parsedId = parseInt(id);
+    if (isNaN(parsedId)) {
       return NextResponse.json({ error: '無効なID' }, { status: 400 });
     }
 
     const { name, targetValue, currentValue, increment } = await request.json();
     
     // 現在のデータを取得
-    const currentRecord = await db.select().from(countdowns).where(eq(countdowns.id, id));
+    const currentRecord = await db.select().from(countdowns).where(eq(countdowns.id, parsedId));
     
     if (currentRecord.length === 0) {
       return NextResponse.json({ error: 'カウントアップが見つかりません' }, { status: 404 });
@@ -129,7 +132,7 @@ export async function POST(
     
     const result = await db.update(countdowns)
       .set(updateData)
-      .where(eq(countdowns.id, id))
+      .where(eq(countdowns.id, parsedId))
       .returning();
     
     if (result.length === 0) {
@@ -146,16 +149,17 @@ export async function POST(
 // カウントアップを削除
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
-    if (isNaN(id)) {
+    const { id } = await params;
+    const parsedId = parseInt(id);
+    if (isNaN(parsedId)) {
       return NextResponse.json({ error: '無効なID' }, { status: 400 });
     }
 
     const result = await db.delete(countdowns)
-      .where(eq(countdowns.id, id))
+      .where(eq(countdowns.id, parsedId))
       .returning();
     
     if (result.length === 0) {
