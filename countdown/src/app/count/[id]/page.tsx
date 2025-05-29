@@ -32,6 +32,7 @@ export default function CountPage({ params }: CountPageParams) {
   const router = useRouter();
   const [countdown, setCountdown] = useState<Countdown | null>(null);
   const [currentValueInput, setCurrentValueInput] = useState('');
+  const [targetValueInput, setTargetValueInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCelebration, setShowCelebration] = useState(false);
@@ -248,6 +249,35 @@ export default function CountPage({ params }: CountPageParams) {
     }
   };
 
+  const handleSetTargetValue = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!countdown || !targetValueInput) return;
+    
+    try {
+      const newValue = parseInt(targetValueInput);
+      if (isNaN(newValue) || newValue < 1) return;
+      
+      const response = await fetch(`/api/count/${countdown.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetValue: newValue }),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || '目標値の更新に失敗しました');
+      }
+      
+      const data = await response.json();
+      setCountdown(data);
+      setTargetValueInput('');
+      setError('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '目標値の更新に失敗しました');
+      console.error(err);
+    }
+  };
+
   // 数値を桁ごとに分割する関数
   const getDigits = (num: number): number[] => {
     return num.toString().split('').map(Number);
@@ -361,7 +391,7 @@ export default function CountPage({ params }: CountPageParams) {
             <dd>{new Date(countdown.updatedAt).toLocaleString()}</dd>
           </dl>
 
-          <form onSubmit={handleSetCurrentValue} className="flex gap-2 justify-center mb-8 mt-16">
+          <form onSubmit={handleSetCurrentValue} className="flex gap-2 justify-center mb-4 mt-16">
             <input
               type="number"
               value={currentValueInput}
@@ -376,6 +406,23 @@ export default function CountPage({ params }: CountPageParams) {
               className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded shadow-md transition duration-200"
             >
               値をセット
+            </button>
+          </form>
+
+          <form onSubmit={handleSetTargetValue} className="flex gap-2 justify-center mb-8">
+            <input
+              type="number"
+              value={targetValueInput}
+              onChange={(e) => setTargetValueInput(e.target.value)}
+              className="border p-2 rounded shadow-sm w-32"
+              placeholder="目標値を入力"
+              min="1"
+            />
+            <button 
+              type="submit" 
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow-md transition duration-200"
+            >
+              目標値をセット
             </button>
           </form>
           
