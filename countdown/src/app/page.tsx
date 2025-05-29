@@ -94,93 +94,190 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-8 bg-gradient-to-b from-blue-50 to-blue-100">
-      <div className="w-full max-w-4xl">
-        <h1 className="text-4xl font-bold mb-8 text-center text-blue-800">カウントアップチャレンジ</h1>
-        
-        {/* 新規作成フォーム */}
-        <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-          <h2 className="text-2xl font-bold mb-4 text-blue-700">新規カウントアップ作成</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="name" className="block text-gray-700 mb-1">名前</label>
-              <input
-                id="name"
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full border p-2 rounded shadow-sm"
-                placeholder="カウントアップの名前"
-                required
-              />
+    <main className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 relative overflow-hidden">
+      {/* 背景装飾 */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `radial-gradient(circle at 25px 25px, rgba(156, 146, 172, 0.1) 2px, transparent 2px)`,
+          backgroundSize: '50px 50px'
+        }}></div>
+      </div>
+      
+      {/* 浮遊する装飾要素 */}
+      <div className="absolute top-20 left-10 w-20 h-20 bg-gradient-to-r from-pink-400 to-purple-400 rounded-full opacity-20 animate-pulse"></div>
+      <div className="absolute top-40 right-20 w-16 h-16 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-full opacity-20 animate-bounce"></div>
+      <div className="absolute bottom-20 left-20 w-24 h-24 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full opacity-20 animate-pulse delay-1000"></div>
+      <div className="absolute bottom-40 right-10 w-12 h-12 bg-gradient-to-r from-green-400 to-teal-400 rounded-full opacity-20 animate-bounce delay-500"></div>
+      
+      <div className="relative z-10 flex flex-col items-center p-8">
+        <div className="w-full max-w-6xl">
+          {/* ヘッダー */}
+          <div className="text-center mb-12 animate-fade-in">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full mb-6 shadow-2xl">
+              <span className="text-3xl">🎯</span>
             </div>
-            <div>
-              <label htmlFor="targetValue" className="block text-gray-700 mb-1">目標値</label>
-              <input
-                id="targetValue"
-                type="number"
-                value={targetValue}
-                onChange={(e) => setTargetValue(e.target.value)}
-                className="w-full border p-2 rounded shadow-sm"
-                placeholder="目標値"
-                min="1"
-                required
-              />
-            </div>
-            <button 
-              type="submit" 
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow-md transition duration-200"
-              disabled={loading}
-            >
-              作成
-            </button>
-          </form>
-        </div>
-
-        {/* エラーメッセージ */}
-        {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-            {error}
+            <h1 className="text-6xl font-bold bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent mb-4 drop-shadow-lg">
+              カウントアップチャレンジ
+            </h1>
+            <p className="text-xl text-purple-200 opacity-90">目標に向かって一歩ずつ進もう</p>
           </div>
-        )}
-        
-        {/* カウントアップ一覧 */}
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold mb-4 text-blue-700">カウントアップ一覧</h2>
           
-          {loading && countdowns.length === 0 ? (
-            <p className="text-center text-gray-500 py-4">読み込み中...</p>
-          ) : countdowns.length === 0 ? (
-            <p className="text-center text-gray-500 py-4">カウントアップがありません。新しく作成してください。</p>
-          ) : (
-            <div className="grid gap-4">
-              {countdowns.map((countdown) => (
-                <div key={countdown.id} className="flex items-center justify-between border-b pb-3">
-                  <div>
-                    <h3 className="font-bold text-lg">{countdown.name}</h3>
-                    <p className="text-gray-600">
-                      進捗: {countdown.currentValue} / {countdown.targetValue}
-                      （{Math.round((countdown.currentValue / countdown.targetValue) * 100)}%）
-                    </p>
+          {/* 新規作成フォーム */}
+          <div className="bg-white/10 backdrop-blur-lg p-8 rounded-3xl shadow-2xl mb-12 border border-white/20 hover:bg-white/15 transition-all duration-300 transform hover:scale-[1.02]">
+            <div className="flex items-center mb-6">
+              <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-blue-400 rounded-full flex items-center justify-center mr-3">
+                <span className="text-white text-lg">✨</span>
+              </div>
+              <h2 className="text-3xl font-bold text-white">新規カウントアップ作成</h2>
+            </div>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <label htmlFor="name" className="block text-white/90 font-semibold text-lg">📝 名前</label>
+                <input
+                  id="name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full bg-white/20 backdrop-blur-sm border border-white/30 p-4 rounded-2xl shadow-lg text-white placeholder-white/60 focus:outline-none focus:ring-4 focus:ring-purple-400/50 focus:border-purple-400 transition-all duration-300"
+                  placeholder="例：読書チャレンジ、筋トレ回数など"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="targetValue" className="block text-white/90 font-semibold text-lg">🎯 目標値</label>
+                <input
+                  id="targetValue"
+                  type="number"
+                  value={targetValue}
+                  onChange={(e) => setTargetValue(e.target.value)}
+                  className="w-full bg-white/20 backdrop-blur-sm border border-white/30 p-4 rounded-2xl shadow-lg text-white placeholder-white/60 focus:outline-none focus:ring-4 focus:ring-purple-400/50 focus:border-purple-400 transition-all duration-300"
+                  placeholder="達成したい数値"
+                  min="1"
+                  required
+                />
+              </div>
+              <button 
+                type="submit" 
+                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-8 py-4 rounded-2xl shadow-2xl font-bold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                    作成中...
                   </div>
-                  <div className="flex space-x-2">
-                    <Link
-                      href={`/count/${countdown.id}`}
-                      className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded shadow-sm transition duration-200"
-                    >
-                      表示
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(countdown.id)}
-                      className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow-sm transition duration-200"
-                    >
-                      削除
-                    </button>
+                ) : (
+                  <div className="flex items-center justify-center">
+                    <span className="mr-2">🚀</span>
+                    作成する
                   </div>
-                </div>
-              ))}
+                )}
+              </button>
+            </form>
+          </div>
+
+          {/* エラーメッセージ */}
+          {error && (
+            <div className="bg-red-500/20 backdrop-blur-sm border border-red-400/50 text-red-100 px-6 py-4 rounded-2xl mb-8 shadow-lg animate-shake">
+              <div className="flex items-center">
+                <span className="text-2xl mr-3">⚠️</span>
+                {error}
+              </div>
             </div>
           )}
+          
+          {/* カウントアップ一覧 */}
+          <div className="bg-white/10 backdrop-blur-lg p-8 rounded-3xl shadow-2xl border border-white/20">
+            <div className="flex items-center mb-8">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full flex items-center justify-center mr-3">
+                <span className="text-white text-lg">📊</span>
+              </div>
+              <h2 className="text-3xl font-bold text-white">カウントアップ一覧</h2>
+            </div>
+            
+            {loading && countdowns.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4 animate-spin">
+                  <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full"></div>
+                </div>
+                <p className="text-white/80 text-xl">読み込み中...</p>
+              </div>
+            ) : countdowns.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">📈</div>
+                <p className="text-white/80 text-xl mb-4">カウントアップがありません</p>
+                <p className="text-white/60">新しく作成して目標に向かって進みましょう！</p>
+              </div>
+            ) : (
+              <div className="grid gap-6">
+                {countdowns.map((countdown, index) => {
+                  const progress = Math.round((countdown.currentValue / countdown.targetValue) * 100);
+                  const isCompleted = countdown.currentValue >= countdown.targetValue;
+                  
+                  return (
+                    <div 
+                      key={countdown.id} 
+                      className={`bg-white/10 backdrop-blur-sm border border-white/20 p-6 rounded-2xl shadow-lg hover:bg-white/15 transition-all duration-300 transform hover:scale-[1.02] animate-fade-in-up ${isCompleted ? 'ring-2 ring-yellow-400/50' : ''}`}
+                      style={{ animationDelay: `${index * 100}ms` }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center mb-3">
+                            <span className="text-2xl mr-3">{isCompleted ? '🏆' : '🎯'}</span>
+                            <h3 className="font-bold text-2xl text-white">{countdown.name}</h3>
+                            {isCompleted && (
+                              <span className="ml-3 bg-gradient-to-r from-yellow-400 to-orange-400 text-black px-3 py-1 rounded-full text-sm font-bold animate-pulse">
+                                完了！
+                              </span>
+                            )}
+                          </div>
+                          
+                          {/* プログレスバー */}
+                          <div className="mb-4">
+                            <div className="flex justify-between text-white/80 text-sm mb-2">
+                              <span>進捗: {countdown.currentValue} / {countdown.targetValue}</span>
+                              <span>{progress}%</span>
+                            </div>
+                            <div className="w-full bg-white/20 rounded-full h-3 overflow-hidden">
+                              <div 
+                                className={`h-3 rounded-full transition-all duration-1000 ease-out ${
+                                  isCompleted 
+                                    ? 'bg-gradient-to-r from-yellow-400 to-orange-400' 
+                                    : 'bg-gradient-to-r from-blue-400 to-purple-400'
+                                }`}
+                                style={{ width: `${Math.min(100, progress)}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                          
+                          <p className="text-white/70 text-sm">
+                            作成日: {new Date(countdown.createdAt).toLocaleDateString('ja-JP')}
+                          </p>
+                        </div>
+                        
+                        <div className="flex flex-col space-y-3 ml-6">
+                          <Link
+                            href={`/count/${countdown.id}`}
+                            className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white px-6 py-3 rounded-xl shadow-lg font-bold transition-all duration-300 transform hover:scale-105 text-center"
+                          >
+                            <span className="mr-2">👀</span>
+                            表示
+                          </Link>
+                          <button
+                            onClick={() => handleDelete(countdown.id)}
+                            className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white px-6 py-3 rounded-xl shadow-lg font-bold transition-all duration-300 transform hover:scale-105"
+                          >
+                            <span className="mr-2">🗑️</span>
+                            削除
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </main>
