@@ -5,11 +5,11 @@ import { eq } from 'drizzle-orm';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  // 事前にIDを解析して変数に格納
-  const idParam = params.id;
-  const parsedId = parseInt(idParam);
+  // paramsをawaitしてからIDを取得
+  const { id } = await params;
+  const parsedId = parseInt(id);
   
   // IDが無効な場合は早期にエラーレスポンスを返す
   if (isNaN(parsedId)) {
@@ -19,21 +19,39 @@ export async function GET(
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
+      let isClosed = false;
+      
       // 指定されたIDのカウントアップを取得する関数
       const sendCountdown = async () => {
+        // コントローラーが閉じられている場合は何もしない
+        if (isClosed) {
+          return;
+        }
+        
         try {
           console.log(`Fetching countdown data for ID: ${parsedId}`);
           const result = await db.select().from(countdowns).where(eq(countdowns.id, parsedId)).limit(1);
           
           if (result.length === 0) {
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: 'カウントアップが見つかりません' })}\n\n`));
+            if (!isClosed) {
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: 'カウントアップが見つかりません' })}\n\n`));
+            }
             return;
           }
           
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify(result[0])}\n\n`));
+          if (!isClosed) {
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify(result[0])}\n\n`));
+          }
         } catch (error) {
           console.error('Error fetching countdown:', error);
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: 'データ取得エラー' })}\n\n`));
+          if (!isClosed) {
+            try {
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: 'データ取得エラー' })}\n\n`));
+            } catch (enqueueError) {
+              console.error('Controller already closed:', enqueueError);
+              isClosed = true;
+            }
+          }
         }
       };
 
@@ -43,10 +61,17 @@ export async function GET(
       // 10秒ごとに実行するinterval
       const interval = setInterval(sendCountdown, 10000);
 
+      // クリーンアップ関数を返す
       return () => {
+        isClosed = true;
         clearInterval(interval);
       };
     },
+    
+    cancel() {
+      // ストリームがキャンセルされた時の処理
+      console.log('SSE stream cancelled');
+    }
   });
 
   return new NextResponse(stream, {
