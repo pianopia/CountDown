@@ -7,8 +7,12 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
-# ビルド時に必要な環境変数を設定
+# Build-only placeholders (runtime uses Cloud Run secrets; not real credentials).
+ARG TURSO_DATABASE_URL=libsql://build-placeholder.turso.io
+ARG TURSO_AUTH_TOKEN=build-placeholder-token
 ENV NODE_ENV=production
+ENV TURSO_DATABASE_URL=$TURSO_DATABASE_URL
+ENV TURSO_AUTH_TOKEN=$TURSO_AUTH_TOKEN
 
 # ソースコードをコピー
 COPY . .

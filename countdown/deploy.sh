@@ -16,12 +16,22 @@ fi
 gcloud config set project "$PROJECT_ID"
 gcloud auth configure-docker asia-east1-docker.pkg.dev --quiet
 
-if docker buildx version >/dev/null 2>&1; then
-  docker buildx build -t "$IMAGE" --platform linux/amd64 --load .
-else
-  docker build -t "$IMAGE" .
+DOCKER="docker"
+if ! docker info >/dev/null 2>&1; then
+  if sudo docker info >/dev/null 2>&1; then
+    DOCKER="sudo docker"
+  else
+    echo "Docker is not available." >&2
+    exit 1
+  fi
 fi
-docker push "$IMAGE"
+
+if $DOCKER buildx version >/dev/null 2>&1; then
+  $DOCKER buildx build -t "$IMAGE" --platform linux/amd64 --load .
+else
+  $DOCKER build -t "$IMAGE" .
+fi
+$DOCKER push "$IMAGE"
 
 gcloud run deploy "$SERVICE_NAME" \
   --image "$IMAGE" \
