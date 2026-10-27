@@ -15,13 +15,12 @@ Set both in every environment where the app or Drizzle tooling runs (Cloud Run, 
 
 Update the service with the **existing** values (copy from your secure store or the current deployment — do not commit them to git):
 
-```bash
-gcloud run services update countdown \
-  --region=asia-east1 \
-  --set-env-vars "TURSO_DATABASE_URL=<existing-url>,TURSO_AUTH_TOKEN=<existing-token>,NODE_ENV=production"
-```
+Prefer Secret Manager (already configured for CountDown):
 
-Or use Secret Manager and reference secrets in the Cloud Run service configuration.
+- `countdown-turso-url` → `TURSO_DATABASE_URL`
+- `countdown-turso-token` → `TURSO_AUTH_TOKEN`
+
+From the `countdown/` directory, run `./deploy.sh` (builds, pushes, deploys with `--set-secrets`, routes traffic to latest, and runs an HTTP smoke check). Ensure `gcloud` is authenticated for project `frash-447004`, or set `GCP_SA_KEY_JSON` to a deploy service account key for non-interactive use.
 
 ### Local development
 
