@@ -1,11 +1,17 @@
+import { loadEnvConfig } from '@next/env';
 import { drizzle } from 'drizzle-orm/libsql';
 import { createClient } from '@libsql/client';
 import { sql } from 'drizzle-orm';
 import { countdowns } from './schema';
+import { getTursoCredentials } from './turso-env';
+
+loadEnvConfig(process.cwd());
+
+const { url, authToken } = getTursoCredentials();
 
 const client = createClient({
-  url: 'libsql://countdown-pianopia.turso.io',
-  authToken: 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3NDM2ODM2NDEsImlkIjoiNTViNDdjNTItNjAzNy00YmFkLTkwZmMtOGZhOGJlMDI0NjRjIn0.BzNssln4iq1Fo-JKHOzI6qusJDhQoyRU_LWov0tbWW2lYs7kcqBc3A3TPteh_COshj9StqudJrq7ndOrahTYAw',
+  url,
+  authToken,
 });
 const db = drizzle(client);
 
@@ -19,7 +25,7 @@ async function main() {
   }
 
   console.log('Creating table...');
-  
+
   await db.run(sql`
     CREATE TABLE countdowns (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -52,4 +58,4 @@ main().catch((err) => {
   console.error('Failed to create table');
   console.error(err);
   process.exit(1);
-}); 
+});
