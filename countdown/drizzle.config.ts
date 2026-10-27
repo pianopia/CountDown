@@ -1,11 +1,14 @@
 import type { Config } from 'drizzle-kit';
+import { getTursoCredentials } from './src/db/turso-env';
+
+const { url, authToken } = getTursoCredentials();
 
 export default {
   schema: './src/db/schema.ts',
   out: './drizzle',
   driver: 'turso',
   dbCredentials: {
-    url: 'libsql://REDACTED.turso.io',
-    authToken: 'REDACTED_TURSO_AUTH_TOKEN',
+    url,
+    authToken,
   },
-} satisfies Config; 
+} satisfies Config;

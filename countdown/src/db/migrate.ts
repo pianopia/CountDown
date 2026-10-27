@@ -2,11 +2,11 @@ import { drizzle } from 'drizzle-orm/libsql';
 import { createClient } from '@libsql/client';
 import { sql } from 'drizzle-orm';
 import { countdowns } from './schema';
+import { getTursoCredentials } from './turso-env';
 
-const client = createClient({
-  url: 'libsql://REDACTED.turso.io',
-  authToken: 'REDACTED_TURSO_AUTH_TOKEN',
-});
+const { url, authToken } = getTursoCredentials();
+
+const client = createClient({ url, authToken });
 const db = drizzle(client);
 
 async function main() {
@@ -19,7 +19,7 @@ async function main() {
   }
 
   console.log('Creating table...');
-  
+
   await db.run(sql`
     CREATE TABLE countdowns (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -31,7 +31,6 @@ async function main() {
     );
   `);
 
-  // 初期データを挿入
   console.log('Inserting initial data...');
   const existingData = await db.select().from(countdowns);
   if (existingData.length === 0) {
@@ -52,4 +51,4 @@ main().catch((err) => {
   console.error('Failed to create table');
   console.error(err);
   process.exit(1);
-}); 
+});
