@@ -1,5 +1,8 @@
 # ベースイメージを指定
-FROM node:20-alpine AS build
+FROM node:24.22.1-alpine AS build
+
+# better-sqlite3 has no Node 24 prebuild for v11; toolchain for node-gyp
+RUN apk add --no-cache python3 make g++
 
 WORKDIR /app
 
